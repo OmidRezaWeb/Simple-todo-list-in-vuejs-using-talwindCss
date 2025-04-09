@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: vazir;
+  font-style: normal;
+  font-weight: 200 700;
+  font-display: swap;
+  src: url("fonts/vazir.woff") format("woff");
+}
+
+@theme {
+  --font-vazir: "vazir"; 
+}
+
+.active-list{
+  border-bottom:2px solid #2b7fff;
+  color:#fafafa ;
+
+}

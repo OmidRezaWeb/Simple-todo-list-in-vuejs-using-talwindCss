@@ -1,110 +1,84 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useTodoStore } from '@/stores/todo'
 
-let id = 0;
+const todoStore = useTodoStore()
+const { filteredTodoList, remainingTodos } = storeToRefs(todoStore)
+const { toggleTodo, removeTodo, addNewTodo } = todoStore
 
-const newTodo = ref("");
-const todoStatus = ref(false);
+const newTodo = ref('')
 const filteredTodo = ref('all')
-const todoList = ref([
-  { id: id++, text: "یاد گرفتن vuejs", status: false },
-  { id: id++, text: "یاد گرفتن nuxtjs", status: false },
-  { id: id++, text: "یاد گرفتن vue router", status: false },
-]);
-// فیلتر کردن کار ها  
-const filteredTodoList = computed(() => {
-    if(filteredTodo.value=='done'){
-     return todoList.value.filter((t) => t.status)
-    }else if(filteredTodo.value=='remaining'){
-     return todoList.value.filter((t) => !t.status)
-    }else{
-      return   todoList.value;
-    }
-});
 
-// اضافه کردن کار جدید
-function addNewTodo() {
-  todoList.value.push({ id: id++, text: newTodo.value, status: false });
-  newTodo.value = "";
-}
-// حذف کردن کار ها
-function removTodo(todo) {
-  todoList.value = todoList.value.filter((t) => t !== todo);
+const handleAddTodo = () => {
+  addNewTodo(newTodo.value)
+  newTodo.value = ''
 }
 </script>
 
 <template>
-  <!-- بخش اصلی -->
-  <main class="w-xl bg-zinc-800 rounded-md pb-5 m-auto mt-48">
-    <!-- منو بالای لیست -->
+  <main class="max-w-xl bg-zinc-800 rounded-md pb-5 mx-auto mt-48">
     <header class="border-b-2 border-zinc-900 flex justify-center pt-3">
       <ul class="flex gap-5 hover:cursor-pointer text-sm">
         <li
-        @click="filteredTodo='all'"
+          @click="filteredTodo = 'all'"
           :class="[
-            'text-center text-zinc-500 hover:text-zinc-50 hover:border-b-2 border-blue-500 rounded-full h-6.5 w-26',
-            {'active-list' :filteredTodo=='all'}
+            'text-center text-zinc-500 hover:text-zinc-50 hover:border-b-2 border-blue-500 rounded-full h-7 w-24',
+            { 'active-list': filteredTodo === 'all' },
           ]"
         >
-          همه کار ها
+          همه کارها
         </li>
-
         <li
-        @click="filteredTodo='done'"
+          @click="filteredTodo = 'done'"
           :class="[
-            'text-center text-zinc-500 hover:text-zinc-50 hover:border-b-2 border-blue-500 rounded-full h-6.5 w-26', 
-            {'active-list': filteredTodo=='done'}
+            'text-center text-zinc-500 hover:text-zinc-50 hover:border-b-2 border-blue-500 rounded-full h-7 w-24',
+            { 'active-list': filteredTodo === 'done' },
           ]"
         >
-          انجام شده
+          انجام‌شده
         </li>
-
         <li
-        @click="filteredTodo='remaining'"
+          @click="filteredTodo = 'remaining'"
           :class="[
-            'text-center text-zinc-500 hover:text-zinc-50 hover:border-b-2 border-blue-500 rounded-full h-6.5 w-26',
-            {'active-list':filteredTodo=='remaining'}
+            'text-center text-zinc-500 hover:text-zinc-50 hover:border-b-2 border-blue-500 rounded-full h-7 w-24',
+            { 'active-list': filteredTodo === 'remaining' },
           ]"
         >
-          باقی مانده
+          باقی‌مانده
         </li>
       </ul>
     </header>
-    <!-- اسم لیست -->
     <section class="my-15">
-      <h1 class="text-center text-3xl font-black">لیست انجام کار ها</h1>
+      <h1 class="text-center text-3xl font-black">لیست انجام کارها</h1>
     </section>
-    <!-- قسمت نمایش و اضافه کردن کار ها -->
-    <form @submit.prevent="addNewTodo" class="w-80 m-auto">
-      <!-- بخش افزودن کار -->
+    <form @submit.prevent="handleAddTodo" class="w-80 mx-auto">
       <div class="relative">
         <input
           required
           v-model="newTodo"
           type="text"
-          name=""
-          id=""
           placeholder="یک کار اضافه کنید"
           class="w-full h-10 rounded-md bg-zinc-900 outline-none pr-3 pl-10 text-sm"
         />
-
         <button
+          type="submit"
           class="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border cursor-pointer"
         >
           +
         </button>
       </div>
     </form>
-    <!-- لیست کار ها -->
-    <ul class="mt-8 mb-10 w-80 m-auto">
+    <ul class="mt-8 mb-10 w-80 mx-auto">
       <li
-        v-for="todo in filteredTodoList"
+        v-for="todo in filteredTodoList(filteredTodo)"
         :key="todo.id"
         class="w-full flex justify-between items-center my-5"
       >
         <label class="relative inline-block w-6 h-6">
           <input
-            v-model="todo.status"
+            :checked="todo.status"
+            @change="toggleTodo(todo.id)"
             type="checkbox"
             class="peer appearance-none w-full h-full bg-gray-300 rounded-full checked:bg-green-500 cursor-pointer"
           />
@@ -112,9 +86,9 @@ function removTodo(todo) {
             class="pointer-events-none absolute inset-0 flex items-center justify-center after:content-['✔'] after:text-white after:opacity-0 peer-checked:after:opacity-100"
           ></span>
         </label>
-        <p :class="['mx-3', { done: todo.status }]">{{ todo.text }}</p>
+        <p :class="['mx-3', { 'line-through': todo.status }]">{{ todo.text }}</p>
         <button
-          @click="removTodo(todo)"
+          @click="removeTodo(todo.id)"
           class="cursor-pointer text-zinc-500 hover:text-red-500"
         >
           X
@@ -124,4 +98,6 @@ function removTodo(todo) {
   </main>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>
